@@ -4,6 +4,8 @@
 import sys
 import os
 import base64
+import re
+import requests
 import numpy as np
 import cv2
 from six import PY3
@@ -17,14 +19,22 @@ def check_image_valid(im_source, im_search):
 
 def imread(filename):
     '''根据图片路径，将图片读取为cv2的图片处理格式.'''
-    if not os.path.isfile(filename):
-        raise Exception("File not exist: " ,filename)
-    if PY3:
-        img = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+    if isinstance(filename, str):
+        if re.match(r"^https?://", filename):
+            resp = requests.get(filename)
+            im = cv2.imdecode(np.frombuffer(resp.content, np.uint8), cv2.IMREAD_UNCHANGED)
+            return im
+        else:
+            if not os.path.isfile(filename):
+                raise Exception("File not exist: " ,filename)
+            if PY3:
+                img = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+            else:
+                filename = filename.encode(sys.getfilesystemencoding())
+                img = cv2.imread(filename, 1)
+            return img
     else:
-        filename = filename.encode(sys.getfilesystemencoding())
-        img = cv2.imread(filename, 1)
-    return img
+        raise Exception("not a url or file path", filename)
 
 
 def imwrite(filename, img):
