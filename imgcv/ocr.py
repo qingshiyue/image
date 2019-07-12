@@ -180,7 +180,7 @@ def word_in_image_all(image, find_word, find_type = 'in', withsize = True):
     words = word_in_data_all(data, find_word,find_type)
     return words
 
-def word_in_image(image,find_word,find_type = 'in', withsize = 'True'):
+def word_in_image(image,find_word,find_type = 'in', withsize = True):
     """
     图片寻找文字,只返回第一个
     :param image:
