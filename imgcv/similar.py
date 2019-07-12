@@ -252,6 +252,13 @@ def image_block_compare(img_source, img_search, blocks=4, algorithm=1):
 
 
 def similer(img_src, img_sch, blocks=8):
+    """
+    图像对比
+    :param img_src: 资源图像
+    :param img_sch: 对比图像
+    :param blocks: 分块数量
+    :return: bool(相似判断), dictionaty(对比描述), cv.image(对比图像)
+    """
     img_src = imread(img_src)
     img_sch = imread(img_sch)
     img_src , img_sch = remove_status_bar(img_src, img_sch)

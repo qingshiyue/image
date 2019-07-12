@@ -3,10 +3,10 @@
 
 import sys
 import os
-import base64
 import re
-import requests
+import base64
 import numpy as np
+import requests
 import cv2
 from six import PY3
 
@@ -16,6 +16,16 @@ def check_image_valid(im_source, im_search):
         return True
     else:
         return False
+
+
+def img_mat_rgb_2_gray(img_mat):
+    """
+    Turn img_mat into gray_scale, so that template match can figure the img data.
+    "print(type(im_search[0][0])")  can check the pixel type.
+    """
+    assert isinstance(img_mat[0][0], np.ndarray), "input must be instance of np.ndarray"
+    return cv2.cvtColor(img_mat, cv2.COLOR_BGR2GRAY)
+
 
 def imread(filename):
     '''根据图片路径，将图片读取为cv2的图片处理格式.'''

@@ -42,11 +42,8 @@ ref: <http://docs.opencv.org/modules/imgproc/doc/geometric_transformations.html#
 '''
 
 import cv2
-import sys
-import os
-from six import PY3
 import numpy as np
-from .util import cut_image_base
+from .util import cut_image_base,imread
 from  .similar import cal_rgb_confidence
 
 THRESHOLD = 0.7
@@ -74,24 +71,21 @@ DEBUG = False
 #    cv2.line(img, (x, y-radius), (x, y+radius), 100) # y line
 #    return img
 
-def show(img):
-    ''' 显示一个图片 '''
-    cv2.imshow('image', img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-def imread(filename):
-    '''根据图片路径，将图片读取为cv2的图片处理格式.'''
-    if not os.path.isfile(filename):
-        raise RuntimeError("file: '%s' not exist" % filename)
-    if PY3:
-        img = cv2.imdecode(np.fromfile(
-            filename, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+def target_error_check(w_h_src, w_h_sch):
+    """
+    校验识别结果区域是否符合常理
+    :param w_h_src: 资源图
+    :param w_h_sch: 识别区域图
+    :return: 是否合理
+    """
+    h_src, w_src = w_h_src
+    h_sch, w_sch = w_h_sch
+    tap1 = min(h_sch/h_src, w_sch/w_src)
+    tap2 = max(h_sch/h_src, w_sch/w_src)
+    if tap1 < 0.2 or tap2 > 5:
+        return False
     else:
-        filename = filename.encode(sys.getfilesystemencoding())
-        img = cv2.imread(filename, 1)
-    return img
+        return True
 
 
 def find_template(im_source, im_search, threshold=0.8, rgb=False, bgremove=False):
@@ -251,14 +245,17 @@ def find_all_sift(im_source, im_search, min_match_count=4, maxcnt=0):
         pypts = []
         for npt in dst.astype(int).tolist():
             pypts.append(tuple(npt[0]))
-
         lt, br = pypts[0], pypts[2]
         middle_point = (lt[0] + br[0]) / 2, (lt[1] + br[1]) / 2
-        # 区域识别可信匹配
-        (x, y, w, h) = cv2.boundingRect(np.array(pypts))
-        img_compare = cut_image_base(im_source,[y,y+h, x, x+w])
-        img_compare = cv2.resize(img_compare, (im_source.shape[1],im_source.shape[0]))
-        threshold = cal_rgb_confidence(im_search, img_compare)
+        (x, y, s_w, s_h) = cv2.boundingRect(np.array(pypts))
+        # 校验区域识别结果合理
+        if target_error_check((s_h,s_w),(h,w)):
+            # 区域识别可信匹配
+            img_compare = cut_image_base(im_source,[y,y + s_h, x, x + s_w])
+            img_compare = cv2.resize(img_compare, (im_source.shape[1],im_source.shape[0]))
+            threshold = cal_rgb_confidence(im_search, img_compare)
+        else:
+            threshold = 0.4
 
         if threshold > THRESHOLD:
             result.append(dict(
