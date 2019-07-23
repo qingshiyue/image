@@ -4,7 +4,7 @@
 import os
 import json
 from .client import get_token_baiduAi, PostWithForm
-from .util import imread, Image_Base64
+from .util import imread, Image_Base64, size_mid_point
 
 AK = 'MAD2nYRkYot6NybAyFUHwRd7'
 SK = 'EseGqDv1rd9wAcylLqq2B9gofOuQrmVH'
@@ -180,13 +180,32 @@ def word_in_image_all(image, find_word, find_type = 'in', withsize = True):
     words = word_in_data_all(data, find_word,find_type)
     return words
 
-def word_in_image(image,find_word,find_type = 'in', withsize = True):
+def word_in_image(image, find_word, find_type = 'in', withsize = True):
     """
     图片寻找文字,只返回第一个
-    :param image:
-    :param find_type:
-    :param withsize:
-    :return:
+    :param image: 图片
+    :param find_word: 待搜素文字
+    :param find_type: 搜索类型
+    :param withsize: 是否需要坐标
+    :return: 包含坐标的字典 {'words': 'str', 'size': [y0, y1, x0, x1]}
     """
     words = word_in_image_all(image,find_word,find_type,withsize)
-    return words[0]
+    if len(words) >= 1:
+        return words[0]
+    else:
+        return []
+
+def tap_in_image(image, find_word, find_type = 'in'):
+    """
+    :param image: 图片
+    :param find_word: 待搜素文字
+    :param find_type: 搜索类型
+    :param withsize: 是否需要坐标
+    :return: 坐标 [x,y]
+    """
+    words = word_in_image(image, find_word, find_type)
+    if words != []:
+        tap = size_mid_point(words['size'])
+        return tap
+    else:
+        return []

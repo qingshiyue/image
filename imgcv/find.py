@@ -324,13 +324,12 @@ def brightness(im):
         total_bright = total_bright + sum(i)
     return float(total_bright) / (height * weight)
 
-
-def find_tap_in_image(imsrc, imsch):
+def find_tap_in_image_all(imsrc, imsch):
     """
     读取图像，搜寻位置
     :param imsrc: 大图
     :param imsch: 小图
-    :return: 位置
+    :return: 位置 [(x,y),(x,y)]
     """
 
     imsch = imread(imsch)
@@ -340,8 +339,25 @@ def find_tap_in_image(imsrc, imsch):
     sizes = find_all(imsrc, imsch)
     data = []
     if len(sizes) == 0:
-        return []
+        return [()]
     for size in sizes:
-        tap = [int(size[0]),int(size[1])]
+        tap = (int(size[0]), int(size[1]))
         data.append(tap)
-    return tap
+    if len(data) > 0:
+        return data
+    else:
+        return []
+
+
+def find_tap_in_image(imsrc, imsch):
+    """
+    读取图像，搜寻位置
+    :param imsrc: 大图
+    :param imsch: 小图
+    :return: 位置 [x,y]
+    """
+    tap = find_tap_in_image_all(imsrc, imsch)
+    if tap!= []:
+        return [tap[0][0], tap[0][1]]
+    else:
+        return []

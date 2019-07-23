@@ -29,11 +29,11 @@ from .keypointMatching import find_surf,find_sift
         2、template: 模板匹配算法，适用于相同尺寸图片对比
         3、surf：加速健壮特征算法，适用于不同尺寸图片对比，速度优于sift，特征较少时匹配不佳
 
-## Imread 
-    参数：图片路径
-    返回参数：cv2图片格式
-## Imwrite
-    参数：图片存储路径，cv2图片
+## Similar
+    参数：资源图路径，对比图路径，分块数量
+    返回参数：相似判断，对比描述，对比生成图（可使用imwrite存储）
+    功能：根据对比图像的尺寸选择不同的对比算法（同尺寸对比可diff细节点，不同尺寸对比误差增加，diff效果较差）
+    
 '''
 
 # SIFT识别特征点匹配，参数设置:
@@ -49,6 +49,7 @@ THRESHOLD = 0.7
 THRESHOLD_SURF = 0.60
 # 汉明距离阈值
 HANMING_DISTANCE = 5
+BAR_PHONE = 100
 
 
 # --------------------------ssim--------------------------#
@@ -74,15 +75,23 @@ def compare_ssim_diff(img_src, img_sch):
                             cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
     # loop over the contours
+    diff_areas = 0
     diff_rect = []
     for c in cnts:
         # compute the bounding box of the contour and then draw the
         # bounding box on both input images to represent where the two
         # images differ
         (x, y, w, h) = cv2.boundingRect(c)
+        if (y + h) < BAR_PHONE:
+            continue
+        if len(c) < 5:
+            continue
         if w < 10 or h < 10:
             continue
+        diff_areas += w * h
+        # print(diff_areas, y)
         diff_rect.append([x, y, w, h])
+    score = 1 - diff_areas / img_sch.shape[0] / img_sch.shape[1]
     return score, diff_rect
 
 
@@ -94,6 +103,8 @@ def image_block_ssim(img_source, img_search, blocks=4):
     :param blocks: 分块数量
     :return: 对比结果，分块对比阈值，对比结果图像
     '''
+    # diff 暂
+    blocks = 1
     block_similer = 0
     scores = []
     ssim_search = []
@@ -106,10 +117,13 @@ def image_block_ssim(img_source, img_search, blocks=4):
             block_similer += 1
         for rect in diff_rect:
             b_search = cv2.rectangle(b_search, (rect[0], rect[1]), (rect[0] + rect[2], rect[1] + rect[3]),
-                                     (100, 100, 0), 8)
+                                     (10, 10, 100), 8)
         ssim_search.append(b_search.copy())
     img_source = np.vstack(img_sources)
     img_search = np.vstack(ssim_search)
+    # img_source = cv2.cvtColor(img_source, cv2.COLOR_BGR2GRAY)
+    # img_search = cv2.cvtColor(img_search, cv2.COLOR_BGR2GRAY)
+    print(img_source.shape,img_search.shape)
     img = np.hstack((img_source, img_search))
     if block_similer == blocks:
         find = True
@@ -261,17 +275,11 @@ def similer(img_src, img_sch, blocks=8):
     """
     img_src = imread(img_src)
     img_sch = imread(img_sch)
-    img_src , img_sch = remove_status_bar(img_src, img_sch)
     des = {}
     des['src_size'] = img_src.shape[:2]
     des['sch_size'] = img_sch.shape[:2]
     if tuple(img_sch.shape[:2]) == tuple(img_src.shape[:2]):
         # 尺寸相同
-        if classify_pHash(img_src, img_sch) > HANMING_DISTANCE:
-            des['algorithm'] = 'phash'
-            des['blocks'] = 1
-            find = False
-        else:
             des['algorithm'] = 'ssim'
             des['blocks'] = blocks
             find, data, img = image_block_ssim(img_src, img_sch, blocks)
