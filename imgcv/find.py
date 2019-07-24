@@ -43,8 +43,8 @@ ref: <http://docs.opencv.org/modules/imgproc/doc/geometric_transformations.html#
 
 import cv2
 import numpy as np
-from .util import cut_image_base,imread
-from  .similar import cal_rgb_confidence
+from .util import cut_image_base, imread
+from .similar import cal_rgb_confidence
 
 THRESHOLD = 0.7
 DEBUG = False
@@ -326,7 +326,7 @@ def brightness(im):
 
 def find_tap_in_image_all(imsrc, imsch):
     """
-    读取图像，搜寻位置
+    读取图像，搜寻所有位置
     :param imsrc: 大图
     :param imsch: 小图
     :return: 位置 [(x,y),(x,y)]
@@ -351,7 +351,7 @@ def find_tap_in_image_all(imsrc, imsch):
 
 def find_tap_in_image(imsrc, imsch):
     """
-    读取图像，搜寻位置
+    读取图像，搜寻第一个位置
     :param imsrc: 大图
     :param imsch: 小图
     :return: 位置 [x,y]

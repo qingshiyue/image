@@ -270,7 +270,7 @@ def similer(img_src, img_sch, blocks=8):
     图像对比
     :param img_src: 资源图像
     :param img_sch: 对比图像
-    :param blocks: 分块数量
+    :param blocks: 分块数量,超过16块置为16
     :return: bool(相似判断), dictionaty(对比描述), cv.image(对比图像)
     """
     img_src = imread(img_src)
@@ -278,6 +278,8 @@ def similer(img_src, img_sch, blocks=8):
     des = {}
     des['src_size'] = img_src.shape[:2]
     des['sch_size'] = img_sch.shape[:2]
+    if blocks > 16:
+        blocks = 16
     if tuple(img_sch.shape[:2]) == tuple(img_src.shape[:2]):
         # 尺寸相同
             des['algorithm'] = 'ssim'
